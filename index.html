@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fake Human Face Image Detector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=DM+Sans:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <p class="eyebrow">Prototype</p>
+        <h1>Fake Human Face Image Detector</h1>
+        <p class="subtitle">
+          Upload a face image or paste an image link. This skeleton includes UX,
+          validation, confidence display, and reasoning placeholders. Real detection is not connected yet.
+        </p>
+      </header>
+
+      <section class="card" aria-labelledby="input-title">
+        <h2 id="input-title">Input</h2>
+        <p class="helper">Supported formats: JPG, JPEG, PNG, WEBP, BMP, TIFF</p>
+
+        <div class="input-grid">
+          <div class="field">
+            <label for="image-file">Upload Image</label>
+            <input id="image-file" type="file" accept=".jpg,.jpeg,.png,.webp,.bmp,.tiff,image/jpeg,image/png,image/webp,image/bmp,image/tiff" />
+          </div>
+
+          <div class="field">
+            <label for="image-url">Or Image URL</label>
+            <input id="image-url" type="url" placeholder="https://example.com/face.jpg" />
+          </div>
+        </div>
+
+        <div class="preview-wrap">
+          <p class="preview-label">Preview</p>
+          <img id="preview" alt="Selected preview" hidden />
+          <p id="preview-empty" class="muted">No image selected yet.</p>
+        </div>
+
+        <div class="actions">
+          <button id="analyze-btn" type="button">Analyze Image</button>
+          <button id="reset-btn" type="button" class="secondary">Reset</button>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="result-title">
+        <h2 id="result-title">Result</h2>
+        <p class="helper">Demo mode: responses are mocked to show UI behavior.</p>
+
+        <div id="status" class="status status-idle">Waiting for input...</div>
+
+        <div id="result-panel" hidden>
+          <div class="result-top">
+            <div>
+              <p class="result-label">Prediction</p>
+              <p id="label" class="label-value">-</p>
+            </div>
+            <div>
+              <p class="result-label">Confidence</p>
+              <p id="confidence" class="confidence-value">-</p>
+            </div>
+          </div>
+
+          <div class="bar-wrap" aria-label="Confidence bar">
+            <div id="bar" class="bar"></div>
+          </div>
+
+          <div>
+            <p class="result-label">Reasoning</p>
+            <ul id="reasons" class="reasons"></ul>
+          </div>
+        </div>
+
+        <div id="noface-panel" class="noface" hidden>
+          No human face detected. Please reupload an image with a clear human face.
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
