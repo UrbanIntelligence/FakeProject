@@ -13,6 +13,8 @@ const barEl = document.getElementById("bar");
 const reasonsEl = document.getElementById("reasons");
 
 const allowedExtensions = ["jpg", "jpeg", "png", "webp", "bmp", "tiff"];
+const maxFileSizeBytes = 100 * 1024 * 1024;
+const aiThreshold = 50;
 
 function setStatus(text, type) {
   statusEl.textContent = text;
@@ -53,15 +55,20 @@ function mockAnalyze(inputRef) {
 
   if (ref.includes("noface") || ref.includes("landscape") || ref.includes("cat")) {
     return {
-      hasFace: false,
+      faceCount: 0,
+    };
+  }
+
+  if (ref.includes("group") || ref.includes("crowd") || ref.includes("twofaces") || ref.includes("multiface")) {
+    return {
+      faceCount: 2,
     };
   }
 
   if (ref.includes("ai") || ref.includes("generated") || ref.includes("midjourney")) {
     return {
-      hasFace: true,
-      label: "AI-generated",
-      confidence: 88,
+      faceCount: 1,
+      aiConfidence: 88,
       reasons: [
         "Skin texture appears unusually uniform in several regions",
         "Fine background details show synthetic blending artifacts",
@@ -71,9 +78,8 @@ function mockAnalyze(inputRef) {
   }
 
   return {
-    hasFace: true,
-    label: "Real",
-    confidence: 82,
+    faceCount: 1,
+    aiConfidence: 18,
     reasons: [
       "Skin pores and micro-variations look naturally distributed",
       "Lighting and shadow transitions align with realistic face geometry",
@@ -84,10 +90,10 @@ function mockAnalyze(inputRef) {
 
 fileInput.addEventListener("change", () => {
   clearResult();
-  setStatus("File selected. Ready to analyze.", "idle");
   const file = fileInput.files?.[0];
   if (!file) {
     clearPreview();
+    setStatus("Waiting for input...", "idle");
     return;
   }
   if (!isAllowedFormat(file.name)) {
@@ -96,7 +102,14 @@ fileInput.addEventListener("change", () => {
     fileInput.value = "";
     return;
   }
+  if (file.size > maxFileSizeBytes) {
+    clearPreview();
+    setStatus("File is too large. Maximum upload size is 100MB.", "error");
+    fileInput.value = "";
+    return;
+  }
   showPreview(URL.createObjectURL(file));
+  setStatus("File selected. Ready to analyze.", "idle");
 });
 
 urlInput.addEventListener("input", () => {
@@ -135,6 +148,10 @@ analyzeBtn.addEventListener("click", async () => {
 
   let inputRef = "";
   if (file) {
+    if (file.size > maxFileSizeBytes) {
+      setStatus("File is too large. Maximum upload size is 100MB.", "error");
+      return;
+    }
     inputRef = file.name;
   } else {
     try {
@@ -151,20 +168,28 @@ analyzeBtn.addEventListener("click", async () => {
 
   const result = mockAnalyze(inputRef);
 
-  if (!result.hasFace) {
+  if (result.faceCount === 0) {
     noFacePanel.hidden = false;
     setStatus("Analysis complete: no face detected.", "error");
     return;
   }
+  if (result.faceCount > 1) {
+    setStatus("Please upload an image with exactly one human face.", "error");
+    return;
+  }
+
+  const isAiGenerated = result.aiConfidence >= aiThreshold;
+  const label = isAiGenerated ? "AI-generated" : "Real";
+  const confidence = isAiGenerated ? result.aiConfidence : 100 - result.aiConfidence;
 
   resultPanel.hidden = false;
-  labelEl.textContent = result.label;
-  confidenceEl.textContent = `${result.confidence}%`;
-  barEl.style.width = `${result.confidence}%`;
+  labelEl.textContent = label;
+  confidenceEl.textContent = `${confidence}%`;
+  barEl.style.width = `${confidence}%`;
 
-  if (result.confidence >= 75) {
+  if (confidence >= 75) {
     barEl.style.background = "var(--ok)";
-  } else if (result.confidence >= 40) {
+  } else if (confidence >= 50) {
     barEl.style.background = "var(--warn)";
   } else {
     barEl.style.background = "var(--bad)";
@@ -176,11 +201,7 @@ analyzeBtn.addEventListener("click", async () => {
     reasonsEl.appendChild(li);
   });
 
-  if (result.confidence >= 40 && result.confidence <= 60) {
-    setStatus("Analysis complete: uncertain result. Try a clearer close-up face image.", "working");
-  } else {
-    setStatus("Analysis complete.", "done");
-  }
+  setStatus("Analysis complete.", "done");
 });
 
 resetBtn.addEventListener("click", () => {

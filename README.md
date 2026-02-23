@@ -5,11 +5,14 @@ Static website skeleton for a fake-human-face detector product.
 ## Included in this skeleton
 - Upload input (`file`) and image link input (`URL`)
 - Major image format validation (`jpg`, `jpeg`, `png`, `webp`, `bmp`, `tiff`)
+- Max file size validation (`100MB`) for uploads
+- Single-face policy messaging (rejects images with multiple faces in demo flow)
 - Placeholder "no face detected" flow
 - Placeholder prediction output:
   - `label` (`Real` or `AI-generated`)
   - `confidence` (`0-100%`)
   - `reasoning` list
+- Threshold rule in demo flow: `AI-generated` when AI confidence is `>= 50%`
 - Mobile-friendly UI
 
 ## Not included yet
