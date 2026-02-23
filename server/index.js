@@ -1,6 +1,8 @@
 import express from "express";
 import multer from "multer";
 import net from "node:net";
+import * as tf from "@tensorflow/tfjs-node";
+import * as blazeface from "@tensorflow-models/blazeface";
 
 const app = express();
 const port = process.env.PORT || 8787;
@@ -9,6 +11,9 @@ const allowedExtensions = new Set(["jpg", "jpeg", "png", "webp", "bmp", "tiff"])
 const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/bmp", "image/tiff"]);
 const maxFileSizeBytes = 100 * 1024 * 1024;
 const aiThreshold = 50;
+const faceDetectorThreshold = 0.7;
+
+let faceModelPromise;
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -37,20 +42,11 @@ function isAllowedExtension(nameOrUrlPath) {
   return allowedExtensions.has(extensionFromName(nameOrUrlPath));
 }
 
-function getMockInference(inputRef) {
+function getMockClassification(inputRef) {
   const ref = String(inputRef).toLowerCase();
-
-  if (ref.includes("noface") || ref.includes("landscape") || ref.includes("cat")) {
-    return { faceCount: 0 };
-  }
-
-  if (ref.includes("group") || ref.includes("crowd") || ref.includes("twofaces") || ref.includes("multiface")) {
-    return { faceCount: 2 };
-  }
 
   if (ref.includes("ai") || ref.includes("generated") || ref.includes("midjourney")) {
     return {
-      faceCount: 1,
       aiConfidence: 88,
       reasons: [
         "Skin texture appears unusually uniform in several regions",
@@ -61,7 +57,6 @@ function getMockInference(inputRef) {
   }
 
   return {
-    faceCount: 1,
     aiConfidence: 18,
     reasons: [
       "Skin pores and micro-variations look naturally distributed",
@@ -71,8 +66,8 @@ function getMockInference(inputRef) {
   };
 }
 
-function toResponsePayload(mockResult) {
-  if (mockResult.faceCount === 0) {
+function faceGateFailurePayload(faceCount) {
+  if (faceCount === 0) {
     return {
       ok: false,
       hasFace: false,
@@ -80,7 +75,7 @@ function toResponsePayload(mockResult) {
     };
   }
 
-  if (mockResult.faceCount > 1) {
+  if (faceCount > 1) {
     return {
       ok: false,
       hasFace: true,
@@ -88,17 +83,49 @@ function toResponsePayload(mockResult) {
     };
   }
 
-  const isAiGenerated = mockResult.aiConfidence >= aiThreshold;
+  return null;
+}
+
+function toResponsePayload(classificationResult) {
+  const isAiGenerated = classificationResult.aiConfidence >= aiThreshold;
   const label = isAiGenerated ? "AI-generated" : "Real";
-  const confidence = isAiGenerated ? mockResult.aiConfidence : 100 - mockResult.aiConfidence;
+  const confidence = isAiGenerated ? classificationResult.aiConfidence : 100 - classificationResult.aiConfidence;
 
   return {
     ok: true,
     hasFace: true,
     label,
     confidence,
-    reasons: mockResult.reasons,
+    reasons: classificationResult.reasons,
   };
+}
+
+async function getFaceModel() {
+  if (!faceModelPromise) {
+    faceModelPromise = blazeface.load();
+  }
+  return faceModelPromise;
+}
+
+async function detectFaceCountFromBuffer(imageBuffer) {
+  let decodedImage;
+  try {
+    decodedImage = tf.node.decodeImage(imageBuffer, 3);
+  } catch {
+    throw new Error("Could not decode image content.");
+  }
+
+  try {
+    const model = await getFaceModel();
+    const predictions = await model.estimateFaces(decodedImage, false);
+    const confidentPredictions = predictions.filter((prediction) => {
+      const probability = Array.isArray(prediction.probability) ? prediction.probability[0] : prediction.probability;
+      return typeof probability !== "number" || probability >= faceDetectorThreshold;
+    });
+    return confidentPredictions.length;
+  } finally {
+    decodedImage.dispose();
+  }
 }
 
 function isPrivateOrLocalIp(ip) {
@@ -168,6 +195,17 @@ async function fetchAndValidateRemoteImage(imageUrl) {
       return { valid: false, message: `Failed to fetch image URL (HTTP ${response.status}).` };
     }
 
+    const finalResponseUrl = new URL(response.url);
+    if (!["http:", "https:"].includes(finalResponseUrl.protocol)) {
+      return { valid: false, message: "Redirect target protocol is not allowed." };
+    }
+    if (finalResponseUrl.hostname === "localhost" || finalResponseUrl.hostname.endsWith(".local")) {
+      return { valid: false, message: "Redirected URL points to a local network target." };
+    }
+    if (isPrivateOrLocalIp(finalResponseUrl.hostname)) {
+      return { valid: false, message: "Redirected URL points to a private or loopback IP target." };
+    }
+
     const contentType = (response.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
     if (!allowedMimeTypes.has(contentType)) {
       return {
@@ -186,7 +224,7 @@ async function fetchAndValidateRemoteImage(imageUrl) {
       return { valid: false, message: "Remote image is too large. Maximum size is 100MB." };
     }
 
-    return { valid: true, bytes: imageBuffer.length };
+    return { valid: true, bytes: imageBuffer.length, imageBuffer, finalPathname: finalResponseUrl.pathname };
   } catch {
     return { valid: false, message: "Failed to fetch image URL safely." };
   } finally {
@@ -198,7 +236,7 @@ app.get("/api/health", (_, res) => {
   res.json({ ok: true, message: "API is running" });
 });
 
-app.post("/api/predict/file", upload.single("image"), (req, res) => {
+app.post("/api/predict/file", upload.single("image"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ ok: false, message: "No image file provided in field 'image'." });
   }
@@ -218,7 +256,19 @@ app.post("/api/predict/file", upload.single("image"), (req, res) => {
     });
   }
 
-  const payload = toResponsePayload(getMockInference(req.file.originalname));
+  let faceCount;
+  try {
+    faceCount = await detectFaceCountFromBuffer(req.file.buffer);
+  } catch (error) {
+    return res.status(400).json({ ok: false, message: error.message || "Failed to process image." });
+  }
+
+  const faceGateFailure = faceGateFailurePayload(faceCount);
+  if (faceGateFailure) {
+    return res.status(400).json(faceGateFailure);
+  }
+
+  const payload = toResponsePayload(getMockClassification(req.file.originalname));
   return res.json(payload);
 });
 
@@ -238,7 +288,20 @@ app.post("/api/predict/url", async (req, res) => {
     return res.status(400).json({ ok: false, message: remoteValidation.message });
   }
 
-  const payload = toResponsePayload(getMockInference(safety.parsed.pathname));
+  let faceCount;
+  try {
+    faceCount = await detectFaceCountFromBuffer(remoteValidation.imageBuffer);
+  } catch (error) {
+    return res.status(400).json({ ok: false, message: error.message || "Failed to process image." });
+  }
+
+  const faceGateFailure = faceGateFailurePayload(faceCount);
+  if (faceGateFailure) {
+    return res.status(400).json(faceGateFailure);
+  }
+
+  const classificationRef = remoteValidation.finalPathname || safety.parsed.pathname;
+  const payload = toResponsePayload(getMockClassification(classificationRef));
   return res.json(payload);
 });
 

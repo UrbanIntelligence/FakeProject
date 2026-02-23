@@ -16,7 +16,6 @@ Static website skeleton for a fake-human-face detector product.
 - Mobile-friendly UI
 
 ## Not included yet
-- Real face detection
 - Real AI-vs-real model inference
 
 ## Step 2 backend API (implemented)
@@ -34,7 +33,16 @@ Rules enforced:
   - blocks localhost and private/loopback IP URL targets
   - verifies remote content-type and size limit
 
-Current backend responses are mocked for face count/prediction logic (same as frontend mock behavior).
+## Step 3 face gate (implemented)
+- Backend now runs real face detection (BlazeFace via TensorFlow.js Node) for both:
+  - file uploads
+  - URL-fetched images
+- Enforced policy:
+  - `0 faces` -> ask user to reupload a clear human face image
+  - `>1 face` -> reject and ask for exactly one face
+  - `1 face` -> continue to classification response
+
+Classification label/reasoning remains mocked for now (Step 4).
 
 Current behavior is mocked in `app.js`.
 
