@@ -9,7 +9,7 @@ const port = process.env.PORT || 8787;
 
 const allowedExtensions = new Set(["jpg", "jpeg", "png", "webp", "bmp", "tiff"]);
 const allowedMimeTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/bmp", "image/tiff"]);
-const maxFileSizeBytes = 100 * 1024 * 1024;
+const maxFileSizeBytes = 20 * 1024 * 1024;
 const aiThreshold = 50;
 const faceDetectorThreshold = 0.7;
 
@@ -216,12 +216,12 @@ async function fetchAndValidateRemoteImage(imageUrl) {
 
     const contentLengthHeader = response.headers.get("content-length");
     if (contentLengthHeader && Number(contentLengthHeader) > maxFileSizeBytes) {
-      return { valid: false, message: "Remote image is too large. Maximum size is 100MB." };
+      return { valid: false, message: "Remote image is too large. Maximum size is 20MB." };
     }
 
     const imageBuffer = Buffer.from(await response.arrayBuffer());
     if (imageBuffer.length > maxFileSizeBytes) {
-      return { valid: false, message: "Remote image is too large. Maximum size is 100MB." };
+      return { valid: false, message: "Remote image is too large. Maximum size is 20MB." };
     }
 
     return { valid: true, bytes: imageBuffer.length, imageBuffer, finalPathname: finalResponseUrl.pathname };
@@ -307,7 +307,7 @@ app.post("/api/predict/url", async (req, res) => {
 
 app.use((err, _, res, __) => {
   if (err?.code === "LIMIT_FILE_SIZE") {
-    return res.status(413).json({ ok: false, message: "File is too large. Maximum upload size is 100MB." });
+    return res.status(413).json({ ok: false, message: "File is too large. Maximum upload size is 20MB." });
   }
 
   return res.status(500).json({ ok: false, message: "Unexpected server error." });

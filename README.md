@@ -5,7 +5,7 @@ Static website skeleton for a fake-human-face detector product.
 ## Included in this skeleton
 - Upload input (`file`) and image link input (`URL`)
 - Major image format validation (`jpg`, `jpeg`, `png`, `webp`, `bmp`, `tiff`)
-- Max file size validation (`100MB`) for uploads
+- Max file size validation (`20MB`) for uploads
 - Single-face policy messaging (rejects images with multiple faces in demo flow)
 - Placeholder "no face detected" flow
 - Placeholder prediction output:
@@ -27,7 +27,7 @@ This repo now includes a Node/Express backend skeleton with validation and safet
 
 Rules enforced:
 - Supported formats: `jpg`, `jpeg`, `png`, `webp`, `bmp`, `tiff`
-- Max file size: `100MB`
+- Max file size: `20MB`
 - URL safety checks:
   - only `http/https`
   - blocks localhost and private/loopback IP URL targets

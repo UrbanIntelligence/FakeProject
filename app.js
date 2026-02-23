@@ -13,7 +13,7 @@ const barEl = document.getElementById("bar");
 const reasonsEl = document.getElementById("reasons");
 
 const allowedExtensions = ["jpg", "jpeg", "png", "webp", "bmp", "tiff"];
-const maxFileSizeBytes = 100 * 1024 * 1024;
+const maxFileSizeBytes = 20 * 1024 * 1024;
 const aiThreshold = 50;
 const configuredApiBaseUrl = window.APP_CONFIG?.apiBaseUrl?.trim() || "";
 const localApiBaseUrl = window.localStorage.getItem("apiBaseUrl") || "";
@@ -147,7 +147,7 @@ fileInput.addEventListener("change", () => {
   }
   if (file.size > maxFileSizeBytes) {
     clearPreview();
-    setStatus("File is too large. Maximum upload size is 100MB.", "error");
+    setStatus("File is too large. Maximum upload size is 20MB.", "error");
     fileInput.value = "";
     return;
   }
@@ -192,7 +192,7 @@ analyzeBtn.addEventListener("click", async () => {
   let inputRef = "";
   if (file) {
     if (file.size > maxFileSizeBytes) {
-      setStatus("File is too large. Maximum upload size is 100MB.", "error");
+      setStatus("File is too large. Maximum upload size is 20MB.", "error");
       return;
     }
     inputRef = file.name;
