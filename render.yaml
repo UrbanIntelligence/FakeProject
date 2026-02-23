@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: fake-image-detector-api
+    runtime: docker
+    plan: starter
+    region: oregon
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true

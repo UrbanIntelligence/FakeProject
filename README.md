@@ -74,6 +74,24 @@ Optional frontend API wiring:
 - To return to pure mock mode:
   - `localStorage.removeItem("apiBaseUrl")`
 
+## Make GitHub Pages use the real backend (Step 3 live)
+GitHub Pages cannot run Node APIs. Deploy `server/index.js` separately, then point the frontend to that backend URL.
+
+### Option A: Render (recommended)
+1. Open [one-click deploy](https://render.com/deploy?repo=https://github.com/UrbanIntelligence/FakeProject).
+2. Create the web service from `render.yaml`.
+3. Wait for deploy, then copy your backend URL (example: `https://fake-image-detector-api.onrender.com`).
+4. Edit `config.js`:
+
+```js
+window.APP_CONFIG = {
+  apiBaseUrl: "https://your-backend-url.onrender.com",
+};
+```
+
+5. Commit and push `config.js` to `main`.
+6. GitHub Pages will redeploy and start calling your live backend.
+
 ## Deploy to GitHub Pages
 1. Create a GitHub repository.
 2. Push this project.

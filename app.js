@@ -15,7 +15,9 @@ const reasonsEl = document.getElementById("reasons");
 const allowedExtensions = ["jpg", "jpeg", "png", "webp", "bmp", "tiff"];
 const maxFileSizeBytes = 100 * 1024 * 1024;
 const aiThreshold = 50;
-const apiBaseUrl = window.localStorage.getItem("apiBaseUrl") || "";
+const configuredApiBaseUrl = window.APP_CONFIG?.apiBaseUrl?.trim() || "";
+const localApiBaseUrl = window.localStorage.getItem("apiBaseUrl") || "";
+const apiBaseUrl = configuredApiBaseUrl || localApiBaseUrl;
 
 function setStatus(text, type) {
   statusEl.textContent = text;
