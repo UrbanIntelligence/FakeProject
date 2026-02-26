@@ -49,11 +49,12 @@ Step 4 classification is active when `server/model/classifier.json` exists.
 - Trainer script:
   - `npm run train:classifier`
   - reads `archive/train.csv` and `archive/valid.csv`
-  - extracts lightweight image features
-  - trains logistic regression
+  - extracts richer forensic features (color histograms, local binary patterns, edge/laplacian texture, blockiness)
+  - trains regularized logistic regression with nonlinear (`zscore + squared`) feature expansion
   - writes model artifact to `server/model/classifier.json`
 - Backend inference uses this artifact when present.
 - If no artifact is found, backend falls back to mock classification.
+- Current baseline (latest training artifact): validation accuracy `~65.8%` on a balanced 600-sample valid split.
 
 Current behavior is mocked in `app.js`.
 
