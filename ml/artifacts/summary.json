@@ -1,0 +1,9 @@
+{
+  "best_valid_acc": 0.794,
+  "best_epoch": 1,
+  "input_size": 224,
+  "class_map": {
+    "fake": 0,
+    "real": 1
+  }
+}

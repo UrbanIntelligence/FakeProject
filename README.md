@@ -123,3 +123,11 @@ window.APP_CONFIG = {
 
 ## Suggested next step
 Upgrade from this logistic baseline to a stronger deep model and calibrate confidence on a held-out test set.
+
+## Transfer-learning track (in progress)
+- Added a PyTorch transfer-learning trainer at `ml/train_transfer.py` (ResNet18).
+- Python deps are listed in `ml/requirements.txt`.
+- Latest local checkpoint metric in `ml/artifacts/summary.json`:
+  - `best_valid_acc: 0.794` (79.4%)
+- Run command:
+  - `python3 ml/train_transfer.py --epochs 15 --batch-size 32 --lr 2e-4 --weight-decay 1e-4 --train-per-class 1800 --valid-per-class 700 --num-workers 0 --freeze-backbone`
