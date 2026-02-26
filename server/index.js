@@ -4,6 +4,7 @@ import net from "node:net";
 import * as tf from "@tensorflow/tfjs-node";
 import * as blazeface from "@tensorflow-models/blazeface";
 import { classifyImageBuffer, loadClassifierModel } from "./classifier.js";
+import { classifyWithTransferModel, getTransferModelStatus } from "./transferClassifier.js";
 
 const app = express();
 const port = process.env.PORT || 8787;
@@ -68,6 +69,11 @@ function getMockClassification(inputRef) {
 }
 
 async function runClassification(imageBuffer, inputRef) {
+  const transferResult = await classifyWithTransferModel(imageBuffer);
+  if (transferResult) {
+    return transferResult;
+  }
+
   const classified = await classifyImageBuffer(imageBuffer, inputRef);
   if (classified) {
     return classified;
@@ -325,6 +331,18 @@ app.use((err, _, res, __) => {
 });
 
 app.listen(port, () => {
+  getTransferModelStatus().then((status) => {
+    if (!status.enabled) {
+      console.log("Transfer model disabled (set ENABLE_TRANSFER_MODEL=1 to enable).");
+      return;
+    }
+    if (!status.available) {
+      console.log("Transfer model enabled but unavailable; using JS classifier fallback.");
+      return;
+    }
+    console.log("Transfer model enabled and available.");
+  });
+
   loadClassifierModel().then((model) => {
     if (model) {
       console.log("Classifier model loaded from server/model/classifier.json");

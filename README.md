@@ -131,3 +131,7 @@ Upgrade from this logistic baseline to a stronger deep model and calibrate confi
   - `best_valid_acc: 0.794` (79.4%)
 - Run command:
   - `python3 ml/train_transfer.py --epochs 15 --batch-size 32 --lr 2e-4 --weight-decay 1e-4 --train-per-class 1800 --valid-per-class 700 --num-workers 0 --freeze-backbone`
+- Serving integration:
+  - Backend can now use the transfer model first, then fallback to JS classifier.
+  - Enable with environment variable: `ENABLE_TRANSFER_MODEL=1`
+  - Python inference entrypoint: `ml/infer_transfer.py`
