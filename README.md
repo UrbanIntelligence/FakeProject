@@ -135,3 +135,4 @@ Upgrade from this logistic baseline to a stronger deep model and calibrate confi
   - Backend can now use the transfer model first, then fallback to JS classifier.
   - Enable with environment variable: `ENABLE_TRANSFER_MODEL=1`
   - Python inference entrypoint: `ml/infer_transfer.py`
+  - Note: current Render Docker config keeps `ENABLE_TRANSFER_MODEL=0` for stable deploys.

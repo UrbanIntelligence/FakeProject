@@ -10,4 +10,4 @@ services:
     autoDeploy: true
     envVars:
       - key: ENABLE_TRANSFER_MODEL
-        value: "1"
+        value: "0"
