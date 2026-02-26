@@ -54,7 +54,7 @@ Step 4 classification is active when `server/model/classifier.json` exists.
   - writes model artifact to `server/model/classifier.json`
 - Backend inference uses this artifact when present.
 - If no artifact is found, backend falls back to mock classification.
-- Current baseline (latest training artifact): validation accuracy `~65.8%` on a balanced 600-sample valid split.
+- Current baseline (latest training artifact): validation accuracy `~66.4%` on a balanced 1,000-sample valid split.
 
 Current behavior is mocked in `app.js`.
 
