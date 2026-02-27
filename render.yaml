@@ -14,7 +14,7 @@ services:
       - key: TRANSFER_SERVICE_URL
         value: "https://scienceclub-mlmodel.hf.space"
       - key: AI_THRESHOLD
-        value: "60"
+        value: "73"
 
   - type: web
     name: fake-image-detector-transfer
