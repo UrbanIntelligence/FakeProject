@@ -12,7 +12,7 @@ services:
       - key: ENABLE_TRANSFER_MODEL
         value: "1"
       - key: TRANSFER_SERVICE_URL
-        value: "https://fake-image-detector-transfer.onrender.com"
+        value: "https://scienceclub-mlmodel.hf.space"
 
   - type: web
     name: fake-image-detector-transfer

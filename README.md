@@ -102,11 +102,13 @@ GitHub Pages cannot run Node APIs. Deploy `server/index.js` separately, then poi
 
 ### Option A: Render (recommended)
 1. Open [one-click deploy](https://render.com/deploy?repo=https://github.com/UrbanIntelligence/FakeProject).
-2. Create both services from `render.yaml`:
+2. Create the Node API service from `render.yaml`:
    - `fake-image-detector-api` (Node API)
-   - `fake-image-detector-transfer` (Python transfer inference)
-3. Wait for deploy, then copy your Node API URL (example: `https://fake-image-detector-api.onrender.com`).
-4. Edit `config.js`:
+3. Ensure environment variables include:
+   - `ENABLE_TRANSFER_MODEL=1`
+   - `TRANSFER_SERVICE_URL=https://scienceclub-mlmodel.hf.space`
+4. Wait for deploy, then copy your Node API URL (example: `https://fake-image-detector-api.onrender.com`).
+5. Edit `config.js`:
 
 ```js
 window.APP_CONFIG = {
@@ -114,8 +116,8 @@ window.APP_CONFIG = {
 };
 ```
 
-5. Commit and push `config.js` to `main`.
-6. GitHub Pages will redeploy and start calling your live backend.
+6. Commit and push `config.js` to `main`.
+7. GitHub Pages will redeploy and start calling your live backend.
 
 ## Deploy to GitHub Pages
 1. Create a GitHub repository.
@@ -136,5 +138,5 @@ Upgrade from this logistic baseline to a stronger deep model and calibrate confi
 - Serving integration:
   - Backend can now use the transfer model first, then fallback to JS classifier.
   - Enable with environment variable: `ENABLE_TRANSFER_MODEL=1`
-  - Configure transfer endpoint with: `TRANSFER_SERVICE_URL=https://<transfer-service>.onrender.com`
+  - Configure transfer endpoint with: `TRANSFER_SERVICE_URL=https://scienceclub-mlmodel.hf.space`
   - Python transfer service entrypoint: `transfer_service/app.py`
